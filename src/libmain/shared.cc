@@ -46,18 +46,21 @@ void printGCWarning()
         "the result might be removed by the garbage collector");
 }
 
-void printMissing(ref<Store> store, const std::vector<DerivedPath> & paths, Verbosity lvl)
+void printMissing(ref<Store> store, const std::vector<DerivedPath> & paths, Verbosity lvl, bool intendToRealise)
 {
-    printMissing(store, store->queryMissing(paths), lvl);
+    printMissing(store, store->queryMissing(paths), lvl, intendToRealise);
 }
 
-void printMissing(ref<Store> store, const MissingPaths & missing, Verbosity lvl)
+void printMissing(ref<Store> store, const MissingPaths & missing, Verbosity lvl, bool intendToRealise)
 {
     if (!missing.willBuild.empty()) {
         if (missing.willBuild.size() == 1)
-            printMsg(lvl, "this derivation will be built:");
+            printMsg(lvl, intendToRealise ? "this derivation will be built:" : "this derivation would be built:");
         else
-            printMsg(lvl, "these %d derivations will be built:", missing.willBuild.size());
+            printMsg(
+                lvl,
+                intendToRealise ? "these %d derivations will be built:" : "these %d derivations would be built:",
+                missing.willBuild.size());
         auto sorted = store->topoSortPaths(missing.willBuild);
         reverse(sorted.begin(), sorted.end());
         for (auto & i : sorted)
@@ -74,7 +77,8 @@ void printMissing(ref<Store> store, const MissingPaths & missing, Verbosity lvl)
         } else {
             printMsg(
                 lvl,
-                "these %d paths will be fetched (%s download, %s unpacked):",
+                intendToRealise ? "these %d paths will be fetched (%.2f MiB download, %.2f MiB unpacked):"
+                                : "these %d paths can be fetched (%.2f MiB download, %.2f MiB unpacked):",
                 missing.willSubstitute.size(),
                 renderSize(missing.downloadSize),
                 renderSize(missing.narSize));
