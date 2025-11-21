@@ -25,11 +25,16 @@
 
 #include "nix/util/exit.hh"
 #include "nix/util/strings.hh"
+#include "nix/util/config-global.hh"
 
 #include "main-config-private.hh"
 #include "nix/expr/config.hh"
 
 namespace nix {
+
+Settings settings;
+
+static GlobalConfig::Register rSettings(&settings);
 
 char ** savedArgv;
 
@@ -298,14 +303,14 @@ void printVersion(const std::string & programName)
     if (verbosity > lvlInfo) {
         Strings cfg;
 #if NIX_USE_BOEHMGC
-        cfg.push_back("gc");
-#endif
+            cfg.push_back("gc");
+    #endif
         cfg.push_back("signed-caches");
         std::cout << "System type: " << settings.thisSystem << "\n";
         std::cout << "Additional system types: " << concatStringsSep(", ", settings.extraPlatforms.get()) << "\n";
         std::cout << "Features: " << concatStringsSep(", ", cfg) << "\n";
-        std::cout << "System configuration file: " << (settings.nixConfDir / "nix.conf") << "\n";
-        std::cout << "User configuration files: " << concatStringsSep(":", settings.nixUserConfFiles) << "\n";
+        std::cout << "System configuration file: " << (std::filesystem::path{bootstrapSettings.nixConfDir} / "nix.conf") << "\n";
+        std::cout << "User configuration files: " << concatStringsSep(":", bootstrapSettings.nixUserConfFiles) << "\n";
         std::cout << "Store directory: " << settings.nixStore << "\n";
         std::cout << "State directory: " << settings.nixStateDir << "\n";
         std::cout << "Data directory: " << settings.nixDataDir << "\n";
